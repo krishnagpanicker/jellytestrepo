@@ -48,6 +48,41 @@ app.post('/signup', async (req, res) => {
   }
 });
 
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body ?? {};
+
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password are required.' });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT id, username, passwordHash AS "passwordHash"
+       FROM users
+       WHERE username = $1`,
+      [username]
+    );
+
+    const user = result.rows[0];
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid username or password.' });
+    }
+
+    const passwordMatches = await argon2.verify(user.passwordHash, password);
+
+    if (!passwordMatches) {
+      return res.status(401).json({ error: 'Invalid username or password.' });
+    }
+
+    return res.json({ id: user.id, username: user.username });
+  }
+  catch (error) {
+    console.error('Unable to log in:', error);
+    return res.status(500).json({ error: 'Unable to log in.' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Jelly backend running at http://localhost:${PORT}`);
 });

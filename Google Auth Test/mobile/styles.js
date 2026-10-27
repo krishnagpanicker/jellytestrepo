@@ -43,6 +43,15 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
   },
+  loggedInContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loggedInText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
   form: {
     backgroundColor: '#ffffff',
     borderRadius: 8,

@@ -7,6 +7,22 @@ import styles from './styles';
 
 export default function App() {
   const [selectedForm, setSelectedForm] = useState(null);
+  const [loggedInUser, setLoggedInUser] = useState(null);
+
+  function handleLogOut() {
+    setLoggedInUser(null);
+  }
+
+  if (loggedInUser) {
+    return (
+      <View style={[styles.container, styles.loggedInContainer]}>
+        <Text style={styles.loggedInText}>You are logged in {loggedInUser}</Text>
+        <Pressable onPress={handleLogOut} style={styles.headerButton}>
+          <Text style={styles.headerButtonText}>Log Out</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -32,7 +48,7 @@ export default function App() {
 
       <View style={styles.content}>
         {selectedForm === 'signUp' && <SignUp />}
-        {selectedForm === 'logIn' && <LogIn />}
+        {selectedForm === 'logIn' && <LogIn onLogIn={setLoggedInUser} />}
       </View>
     </View>
   );
