@@ -1,54 +1,67 @@
-import React, { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import React from 'react';
+import { Alert, Pressable, Text, View } from 'react-native';
+import {
+  GoogleSignin,
+  isSuccessResponse,
+} from '@react-native-google-signin/google-signin';
 
-import LogIn from './components/LogIn';
-import SignUp from './components/SignUp';
+GoogleSignin.configure({
+  webClientId: '664527151770-pensouckkscgrd5bskuh90pooipn2inq.apps.googleusercontent.com',
+  iosClientId: '664527151770-aaa0ub64s2o0m6vn5qmbrco095tedpd2.apps.googleusercontent.com',
+});
+
 import styles from './styles';
 
 export default function App() {
-  const [selectedForm, setSelectedForm] = useState(null);
-  const [loggedInUser, setLoggedInUser] = useState(null);
+  async function handleGoogleSignIn() {
+    try {
+      /** Android feature
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
+      */
+      const signInResponse = await GoogleSignin.signIn();
 
-  function handleLogOut() {
-    setLoggedInUser(null);
-  }
+      if (!isSuccessResponse(signInResponse)) {
+        return;
+      }
 
-  if (loggedInUser) {
-    return (
-      <View style={[styles.container, styles.loggedInContainer]}>
-        <Text style={styles.loggedInText}>You are logged in {loggedInUser}</Text>
-        <Pressable onPress={handleLogOut} style={styles.headerButton}>
-          <Text style={styles.headerButtonText}>Log Out</Text>
-        </Pressable>
-      </View>
-    );
+      const { idToken } = signInResponse.data;
+
+      if (!idToken) {
+        throw new Error('Google did not return an ID token.');
+      }
+
+      const response = await fetch('http://localhost:3000/auth/google', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idToken }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error);
+      }
+
+      console.log('Google sign-in successful:', data);
+    }
+    catch (error) {
+      Alert.alert('Google Sign-In Failed', error.message);
+    }
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={styles.signInCard}>
         <Text style={styles.title}>Jelly Auth Practice</Text>
+        <Text style={styles.signInText}>Sign in to continue</Text>
 
-        <View style={styles.buttonRow}>
-          <Pressable
-            onPress={() => setSelectedForm('signUp')}
-            style={styles.headerButton}
-          >
-            <Text style={styles.headerButtonText}>Sign Up</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => setSelectedForm('logIn')}
-            style={styles.headerButton}
-          >
-            <Text style={styles.headerButtonText}>Log In</Text>
-          </Pressable>
-        </View>
-      </View>
-
-      <View style={styles.content}>
-        {selectedForm === 'signUp' && <SignUp />}
-        {selectedForm === 'logIn' && <LogIn onLogIn={setLoggedInUser} />}
+        <Pressable style={styles.googleButton} onPress={handleGoogleSignIn}>
+          <Text style={styles.googleButtonText}>Log in with Google</Text>
+        </Pressable>
       </View>
     </View>
   );

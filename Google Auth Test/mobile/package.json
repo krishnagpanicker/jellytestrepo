@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
-    "expo": "~58.0.19",
+    "@react-native-google-signin/google-signin": "^16.1.5",
+    "expo": "~58.0.20",
+    "expo-dev-client": "~58.0.16",
     "expo-status-bar": "~58.0.4",
     "react": "19.3.0",
     "react-native": "0.88.0"

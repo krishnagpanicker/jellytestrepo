@@ -3,7 +3,7 @@ import { Pressable, Text, TextInput, View } from 'react-native';
 
 import styles from '../styles';
 
-const API_URL = 'http://100.64.40.105:3000';
+const API_URL = 'http://localhost:3000';
 
 export default function AuthForm({ endpoint, onSuccess, title }) {
   const [username, setUsername] = useState('');

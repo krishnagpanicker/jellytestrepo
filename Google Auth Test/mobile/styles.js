@@ -2,8 +2,39 @@ import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
   container: {
+    alignItems: 'center',
     flex: 1,
     backgroundColor: '#f4f6f8',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  signInCard: {
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    maxWidth: 420,
+    padding: 32,
+    width: '100%',
+  },
+  signInText: {
+    color: '#64748b',
+    fontSize: 16,
+    marginBottom: 24,
+  },
+  googleButton: {
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderColor: '#cbd5e1',
+    borderRadius: 6,
+    borderWidth: 1,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    width: '100%',
+  },
+  googleButtonText: {
+    color: '#1e293b',
+    fontSize: 16,
+    fontWeight: '600',
   },
   header: {
     alignItems: 'center',

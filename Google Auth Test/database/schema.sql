@@ -1,5 +1,6 @@
-create table users(
+create table googleUsers(
 	id integer generated always as identity primary key,
-	username text not null unique,
-	passwordHash text not null
+	gSub text not null unique,
+	username text not null,
+	email text not null
 );
