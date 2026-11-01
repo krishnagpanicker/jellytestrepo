@@ -9,13 +9,19 @@ if (!googleWebClientId){
 }
 
 const express = require('express');
-const argon2 = require('argon2');
 const { Pool } = require('pg');
+const createSessionAuth = require('./sessionAuth');
 
 const app = express();
 const PORT = 3000;
 
 const pool = new Pool();
+const {
+  createSession,
+  sessionAuthHandler,
+  refreshSessionHandler,
+  revokeSessionHandler,
+} = createSessionAuth(pool);
 
 app.use(express.json());
 
@@ -24,6 +30,7 @@ app.get('/', (req, res) => {
 });
 
 app.post('/auth/google', async (req, res) => {
+  console.log('POST /auth/google reached');
   const { idToken } = req.body ?? {};
 
   if (!idToken) {
@@ -49,82 +56,44 @@ app.post('/auth/google', async (req, res) => {
       [gsub, username, email]
     );
 
-    return res.json(result.rows[0]);
+    //after successful google log in, create user jelly session
+    const user = result.rows[0];
+    const tokens = await createSession(user.id);
+
+    //instruction to not store return in HTTP caches
+    res.set('Cache-Control', 'no-store');
+
+    //return OK + user info and session info
+    return res.status(200).json({
+      user: {
+        id: user.id,
+      },
+      ...tokens,
+    });
   }
   catch (error) {
     console.error('Unable to authenticate with Google:', error);
     return res.status(401).json({ error: 'Unable to authenticate with Google.' });
   }
 });
-/**
-app.post('/signup', async (req, res) => {
-  const { username, password } = req.body ?? {};
 
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Username and password are required.' });
-  }
+//protected (sessionAuthHandler) get me request => provides userID for rest of requests.
+app.get('/me', sessionAuthHandler, (req, res) => {
+  res.set('Cache-Control', 'no-store');
 
-  try {
-    const passwordHash = await argon2.hash(password);
-    const result = await pool.query(
-      `INSERT INTO googleUsers (username, passwordHash)
-       VALUES ($1, $2)
-       RETURNING id, username`,
-      [username, passwordHash]
-    );
-
-    return res.status(201).json(result.rows[0]);
-  } 
-  catch (error) {
-    console.error({
-      code: error.code,
-      constraint: error.constraint,
-      detail: error.detail,
-    });
-
-    if (error.code === '23505') {
-      return res.status(409).json({error: "That username is already taken"});
-    }
-
-    return res.status(500).json({ error: 'Unable to create user.' });
-  }
+  return res.status(200).json({
+    user: {
+      id: req.userId,
+    },
+  });
 });
 
-app.post('/login', async (req, res) => {
-  const { username, password } = req.body ?? {};
+//refresh session
+app.post('/auth/refresh', refreshSessionHandler);
 
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Username and password are required.' });
-  }
+//revoke the session identified by a verified refresh token
+app.post('/revokeSession', revokeSessionHandler);
 
-  try {
-    const result = await pool.query(
-      `SELECT id, username, passwordHash AS "passwordHash"
-       FROM googleUsers
-       WHERE username = $1`,
-      [username]
-    );
-
-    const user = result.rows[0];
-
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid username or password.' });
-    }
-
-    const passwordMatches = await argon2.verify(user.passwordHash, password);
-
-    if (!passwordMatches) {
-      return res.status(401).json({ error: 'Invalid username or password.' });
-    }
-
-    return res.json({ id: user.id, username: user.username });
-  }
-  catch (error) {
-    console.error('Unable to log in:', error);
-    return res.status(500).json({ error: 'Unable to log in.' });
-  }
-});
-*/
 app.listen(PORT, () => {
   console.log(`Jelly backend running at http://localhost:${PORT}`);
 });
