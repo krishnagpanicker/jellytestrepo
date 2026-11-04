@@ -7,17 +7,22 @@ import {
 
 const API_URL = 'http://localhost:3000';
 
+//holds the generation num + the promise
 let accountRequest = null;
+//indicates the current user log in session
 let authGeneration = 0;
 
+//get authGeneration num
 export function getAuthGeneration() {
   return authGeneration;
 }
 
+//checks if a requests generation is current
 export function isAuthGenerationCurrent(generation) {
   return generation === authGeneration;
 }
 
+//upon log out, update the generation id + null current user promise
 export function invalidateAuthRequests() {
   authGeneration += 1;
   accountRequest = null;

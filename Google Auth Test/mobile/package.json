@@ -4,18 +4,24 @@
   "main": "index.js",
   "dependencies": {
     "@react-native-google-signin/google-signin": "^16.1.5",
-    "expo": "~58.0.20",
-    "expo-dev-client": "~58.0.16",
+    "expo": "~58.0.23",
+    "expo-dev-client": "~58.0.18",
     "expo-secure-store": "~58.0.2",
     "expo-status-bar": "~58.0.4",
     "react": "19.3.0",
-    "react-native": "0.88.0"
+    "react-native": "0.88.1"
   },
   "scripts": {
+    "postinstall": "node scripts/patch-expo-modules-jsi.js",
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "lint": "eslint ."
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~58.0.4"
+  }
 }
