@@ -36,7 +36,7 @@ export default function AvatarColorPicker({
         accessibilityViewIsModal
         style={styles.modal}
       >
-        //absolute.fill allows for the blurred space outside pop up to close color wheel pop up
+        {/* absolute.fill lets the blurred area outside the popup close it */}
         <Pressable
           accessibilityLabel="Close avatar color picker"
           onPress={onCancel}

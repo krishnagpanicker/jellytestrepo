@@ -2,36 +2,26 @@
 
 Jelly is split into three application folders:
 
-- `Data/` contains the PostgreSQL schema, migrations, and database utility SQL.
-- `GoogleAuth/` contains the Express API and Jelly session authentication.
-- `Mobile/` contains the Expo/React Native application.
+- `database/` contains the PostgreSQL schema and database utility SQL.
+- `backend/` contains the Express API for the entire app, including authentication and session handling.
+- `mobile/` contains the Expo/React Native application.
 
 ## Database
 
 Create the original schema only for a new database:
 
 ```sh
-psql -d jelly_practice_auth -f Data/schema.sql
+psql -d jelly_practice_auth -f database/schema.sql
 ```
-
-For an existing database, apply the username migration instead:
-
-```sh
-psql -d jelly_practice_auth -f Data/migrations/001_add_usernames.sql
-```
-
-The migration never deletes data. If duplicate `user_id` rows already exist in
-`usernames`, it aborts and prints the duplicate IDs so they can be reviewed
-manually before the unique constraint is added.
 
 ## Backend
 
-Create `GoogleAuth/.env` with `GOOGLE_WEB_CLIENT_ID` and the PostgreSQL variables
+Create `backend/.env` with `GOOGLE_WEB_CLIENT_ID` and the PostgreSQL variables
 used by `pg` (`PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, and `PGPASSWORD` as
 needed). Never commit that file.
 
 ```sh
-cd GoogleAuth
+cd backend
 npm ci
 npm start
 ```
@@ -46,7 +36,7 @@ use the computer's LAN IP rather than `localhost`; an Android emulator normally
 uses `http://10.0.2.2:3000`.
 
 ```sh
-cd Mobile
+cd mobile
 npm ci
 EXPO_PUBLIC_API_URL=http://YOUR_COMPUTER_IP:3000 npm start -- --dev-client
 ```
@@ -54,7 +44,7 @@ EXPO_PUBLIC_API_URL=http://YOUR_COMPUTER_IP:3000 npm start -- --dev-client
 To rebuild the existing native development app when needed:
 
 ```sh
-cd Mobile
+cd mobile
 npm run ios
 # or
 npm run android

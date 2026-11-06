@@ -126,10 +126,10 @@ export default function HomeScreen({
           </View>
         </View>
 
+        {/* Open user settings. */}
         <Pressable
           accessibilityLabel={`Open profile settings for ${user.username}`}
           accessibilityRole="button"
-          //open user settings
           onPress={openProfile}
           style={({ pressed }) => [
             styles.profileRow,
