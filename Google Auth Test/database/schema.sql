@@ -30,6 +30,13 @@ CREATE TABLE refresh_tokens (
     used_at timestamptz
 );
 
+CREATE TABLE userInfo (
+    id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id integer NOT NULL UNIQUE REFERENCES googleUsers(id) ON DELETE CASCADE,
+    username text NOT NULL UNIQUE,
+    avatar_color text NOT NULL
+);
+
 create index access_tokens_session_id_idx
 on access_tokens (session_id);
 

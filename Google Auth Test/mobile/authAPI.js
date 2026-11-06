@@ -74,22 +74,28 @@ async function refreshSession(generation) {
   return isAuthGenerationCurrent(generation);
 }
 
-async function requestCurrentUser(generation) {
+async function authenticatedRequest(path, options, generation) {
     //unable to get access token -> try via refresh token
   if (!getAccessToken()) {
     const restored = await refreshSession(generation);
-    //unable to refresh? -> unable to request user -> null
+    //unable to refresh? -> unable to make request -> null
     if (!restored) {
       return null;
     }
   }
 
-  //refresh success -> new access token -> try
-  let response = await fetch(`${API_URL}/me`, {
-    headers: {
-      Authorization: `Bearer ${getAccessToken()}`,
-    },
-  });
+  function sendRequest() {
+    return fetch(`${API_URL}${path}`, {
+      ...options,
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${getAccessToken()}`,
+      },
+    });
+  }
+
+  //access token available -> try request
+  let response = await sendRequest();
 
   if (!isAuthGenerationCurrent(generation)) {
     return null;
@@ -99,26 +105,34 @@ async function requestCurrentUser(generation) {
   if (response.status === 401) {
     const refreshed = await refreshSession(generation);
 
-    //unable to refresh -> sign in needed again -> null (no user)
     if (!refreshed) {
       return null;
     }
 
-    //if access token generated via refresh, try once more
-    response = await fetch(`${API_URL}/me`, {
-      headers: {
-        Authorization: `Bearer ${getAccessToken()}`,
-      },
-    });
+    response = await sendRequest();
 
     if (!isAuthGenerationCurrent(generation)) {
       return null;
     }
   }
 
-  //second /me fail? -> we dont want infinite loop of retry so no user (null)
+  //second authentication failure -> sign in again
   if (response.status === 401) {
     await clearTokens();
+    return null;
+  }
+
+  return response;
+}
+
+async function requestCurrentUser(generation) {
+  const response = await authenticatedRequest(
+    '/me',
+    { headers: {} },
+    generation
+  );
+
+  if (!response) {
     return null;
   }
 
@@ -128,8 +142,70 @@ async function requestCurrentUser(generation) {
     throw new Error(data.error || 'Unable to load your account.');
   }
 
-  //return user data -> {id:...}
   return data.user;
+}
+
+export async function createUserProfile(username) {
+  //request generation id
+  const generation = getAuthGeneration();
+  //http request to profile endpoint -> providing username entered by user
+  const response = await authenticatedRequest(
+    '/me/profile',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username }),
+    },
+    generation
+  );
+
+  //error
+  if (!response) {
+    throw new Error('Please sign in again.');
+  }
+
+  const data = await response.json();
+
+  //error
+  if (!response.ok) {
+    const error = new Error(data.error || 'Unable to save your profile.');
+    error.code = data.code;
+    throw error;
+  }
+
+  //return user object request (user_id, username, avatar color)
+  return data.user;
+}
+
+export async function updateUserProfile({ username, avatarColor }) {
+  const generation = getAuthGeneration();
+  const response = await authenticatedRequest(
+    '/me/profile',
+    {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, avatarColor }),
+    },
+    generation
+  );
+
+  if (!response) {
+    throw new Error('Please sign in again.');
+  }
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    const error = new Error(data.error || 'Unable to save your profile.');
+    error.code = data.code;
+    throw error;
+  }
+
+  return data.profile;
 }
 
 export function loadCurrentUser() {
